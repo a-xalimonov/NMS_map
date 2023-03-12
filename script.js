@@ -59,6 +59,7 @@ function coord() {
 
     this.printPortal = () => {
         const [x, y, z] = ToPortal(this.x, this.y, this.z)
+        console.log(y.toString(16))
         const pHex = this.p.toString(16)
         const sHex = `0`.repeat(3 - this.s.toString(16).length) + this.s.toString(16)
         const xHex = `0`.repeat(3 - x.toString(16).length) + x.toString(16)
@@ -120,18 +121,18 @@ function draw() {
 
 function ToBolster(x, y, z) {
     const shift = (a, l) => {
-        const res = a < l ? a + l - 1 : a - l
+        const res = a < l ? a + l : a - l
         return res
     }
-    return [shift(x, 2048), shift(y, 128), shift(z, 2048)]
+    return [shift(x, 2047), shift(y, 127), shift(z, 2047)]
 }
 
 function ToPortal(x, y, z) {
     const shift = (a, l) => {
-        const res = a < l ? a + l: a - l + 1 
+        const res = a < l ? a + l: a - l 
         return res
     }
-    return [shift(x, 2048), shift(y, 128), shift(z, 2048)]
+    return [shift(x, 2047), shift(y, 127), shift(z, 2047)]
 }
 
 function randomColor() {
