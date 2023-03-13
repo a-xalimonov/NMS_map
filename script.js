@@ -1,6 +1,6 @@
 const GAL_RAD = 200
-const DOT_RAD = 4
 const SCALE = (2 * GAL_RAD) / (2 ** 12 - 2)
+const DOT_RAD = 4 / SCALE
 
 const coord_arr = []
 
@@ -38,8 +38,12 @@ function coord() {
         const y = parseInt(str.slice(4, 6), 16)
         const z = parseInt(str.slice(6, 9), 16)
         const x = parseInt(str.slice(9, 12), 16)
-        ;[this.x, this.y, this.z] = ToBolster(x, y, z)
-        if (this.x && this.y && this.z) {
+        ;[this.x, this.y, this.z] = convert(x, y, z)
+        if (
+            typeof this.x != undefined &&
+            typeof this.y != undefined &&
+            typeof this.z != undefined
+        ) {
             this.printBolster()
             draw()
         }
@@ -51,28 +55,37 @@ function coord() {
         this.y = parseInt(str.slice(4, 8), 16)
         this.z = parseInt(str.slice(8, 12), 16)
         this.s = parseInt(str.slice(12, 16), 16)
-        if (this.x && this.y && this.z) {
+        if (
+            typeof this.x != undefined &&
+            typeof this.y != undefined &&
+            typeof this.z != undefined
+        ) {
             this.printPortal()
             draw()
         }
     }
 
     this.printPortal = () => {
-        const [x, y, z] = ToPortal(this.x, this.y, this.z)
-        console.log(y.toString(16))
+        const [x, y, z] = convert(this.x, this.y, this.z)
         const pHex = this.p.toString(16)
-        const sHex = `0`.repeat(3 - this.s.toString(16).length) + this.s.toString(16)
+        const sHex =
+            `0`.repeat(3 - this.s.toString(16).length) + this.s.toString(16)
         const xHex = `0`.repeat(3 - x.toString(16).length) + x.toString(16)
         const yHex = `0`.repeat(2 - y.toString(16).length) + y.toString(16)
         const zHex = `0`.repeat(3 - z.toString(16).length) + z.toString(16)
-        this.portalTag.value = `${pHex}${sHex}${yHex}${zHex}${xHex}`.toUpperCase()
+        this.portalTag.value =
+            `${pHex}${sHex}${yHex}${zHex}${xHex}`.toUpperCase()
     }
 
     this.printBolster = () => {
-        const xHex = `0`.repeat(4 - this.x.toString(16).length) + this.x.toString(16)
-        const yHex = `0`.repeat(4 - this.y.toString(16).length) + this.y.toString(16)
-        const zHex = `0`.repeat(4 - this.z.toString(16).length) + this.z.toString(16)
-        const sHex = `0`.repeat(4 - this.s.toString(16).length) + this.s.toString(16)
+        const xHex =
+            `0`.repeat(4 - this.x.toString(16).length) + this.x.toString(16)
+        const yHex =
+            `0`.repeat(4 - this.y.toString(16).length) + this.y.toString(16)
+        const zHex =
+            `0`.repeat(4 - this.z.toString(16).length) + this.z.toString(16)
+        const sHex =
+            `0`.repeat(4 - this.s.toString(16).length) + this.s.toString(16)
         this.bolsterTag.value = `${xHex}:${yHex}:${zHex}:${sHex}`.toUpperCase()
     }
 
@@ -83,24 +96,11 @@ function coord() {
 
 function draw() {
     ctx.fillStyle = `#000`
-    ctx.lineWidth = 2
+    ctx.lineWidth = 2 / SCALE
     ctx.strokeStyle = `#0f0`
 
     ctx.resetTransform()
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    ctx.beginPath()
-    ctx.arc(canvas.width / 2, canvas.height / 2, DOT_RAD, 0, 2 * Math.PI)
-    ctx.stroke()
-
-    ctx.beginPath()
-    ctx.rect(
-        canvas.width / 2 - GAL_RAD,
-        canvas.width / 2 - GAL_RAD,
-        2 * GAL_RAD,
-        2 * GAL_RAD
-    )
-    ctx.stroke()
 
     ctx.setTransform(
         SCALE,
@@ -111,31 +111,40 @@ function draw() {
         canvas.height / 2 - GAL_RAD
     )
 
+    ctx.beginPath()
+    ctx.arc(2 ** 11, 2 ** 11, DOT_RAD, 0, 2 * Math.PI)
+    ctx.moveTo(0, 0)
+    ctx.rect(
+        0,
+        0,
+        2 ** 12,
+        2 ** 12
+    )
+    ctx.stroke()
+
+    ctx.lineWidth = 1 / SCALE
     coord_arr.forEach((c) => {
-        ctx.fillStyle = c.color
+        ctx.strokeStyle = c.color
+        const dotPos = c.z + 127 - c.y
+
         ctx.beginPath()
-        ctx.arc(c.x, c.z, DOT_RAD / SCALE, 0, 2 * Math.PI)
+        ctx.moveTo(c.x, c.z)
+        ctx.lineTo(c.x, dotPos)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.arc(c.x, dotPos, DOT_RAD, 0, 2 * Math.PI)
         ctx.fill()
+        ctx.stroke()
     })
 }
 
-function ToBolster(x, y, z) {
-    const shift = (a, l) => {
-        const res = a < l ? a + l : a - l
-        return res
-    }
-    return [shift(x, 2047), shift(y, 127), shift(z, 2047)]
-}
-
-function ToPortal(x, y, z) {
-    const shift = (a, l) => {
-        const res = a < l ? a + l: a - l 
-        return res
-    }
+function convert(x, y, z) {
+    const shift = (a, l) => a < l ? a + l : a - l
     return [shift(x, 2047), shift(y, 127), shift(z, 2047)]
 }
 
 function randomColor() {
-    const getRand = () => Math.trunc(Math.random() * 256)
+    const getRand = () => Math.trunc(Math.random() * 128 + 128)
     return `rgb(${getRand()}, ${getRand()}, ${getRand()})`
 }
